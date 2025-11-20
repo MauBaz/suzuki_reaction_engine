@@ -24,7 +24,6 @@ This project implements an advanced deep learning model that predicts the yield 
 | **Test MAE** | 4-6% | Mean absolute error |
 | **Test R²** | >0.85 | Coefficient of determination |
 
-Starting from baseline MSE ~500 (RMSE ~22%), this implementation achieves competitive state-of-the-art performance.
 
 ## 🏗️ Architecture
 
