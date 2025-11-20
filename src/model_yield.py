@@ -61,17 +61,20 @@ class SuzukiYieldGNN(nn.Module):
         # Edge encoder
         self.edge_encoder = nn.Linear(edge_dim, hidden_dim)
         
-        # GAT layers
-        self.gat1 = GATv2Conv(hidden_dim, hidden_dim, heads=4, concat=True, 
-                               edge_dim=hidden_dim, dropout=dropout)
-        self.gat2 = GATv2Conv(hidden_dim*4, hidden_dim, heads=4, concat=True,
-                               edge_dim=hidden_dim, dropout=dropout)
-        self.gat3 = GATv2Conv(hidden_dim*4, hidden_dim, heads=1, concat=False,
-                               edge_dim=hidden_dim, dropout=dropout)
-        
-        self.bn1 = nn.BatchNorm1d(hidden_dim*4)
-        self.bn2 = nn.BatchNorm1d(hidden_dim*4)
+        # GAT layers (now 4 layers)
+        self.gat1 = GATv2Conv(hidden_dim, hidden_dim, heads=4, concat=False, edge_dim=hidden_dim)
+        self.gat2 = GATv2Conv(hidden_dim, hidden_dim, heads=4, concat=False, edge_dim=hidden_dim)
+        self.gat3 = GATv2Conv(hidden_dim, hidden_dim, heads=4, concat=False, edge_dim=hidden_dim)
+        self.gat4 = GATv2Conv(hidden_dim, hidden_dim, heads=4, concat=False, edge_dim=hidden_dim)
+
+
+
+        # Batch normalization
+        self.bn1 = nn.BatchNorm1d(hidden_dim)  # 256
+        self.bn2 = nn.BatchNorm1d(hidden_dim)
         self.bn3 = nn.BatchNorm1d(hidden_dim)
+        self.bn4 = nn.BatchNorm1d(hidden_dim)
+
         
         # Pooling
         self.set2set = Set2Set(hidden_dim, processing_steps=3)
@@ -110,13 +113,14 @@ class SuzukiYieldGNN(nn.Module):
         else:
             edge_attr = None
         
-        # GAT layers
+        # GAT layers with residual connections
         x1 = F.elu(self.bn1(self.gat1(x, edge_index, edge_attr)))
         x2 = F.elu(self.bn2(self.gat2(x1, edge_index, edge_attr)))
-        x3 = self.bn3(self.gat3(x2, edge_index, edge_attr))
-        
-        # Residual
-        x = x + x3
+        x3 = F.elu(self.bn3(self.gat3(x2, edge_index, edge_attr)))
+        x4 = self.bn4(self.gat4(x3, edge_index, edge_attr))
+
+        # Skip connection (from initial x to final x4)
+        x = x + x4
         
         # Pooling
         x_pooled = self.set2set(x, batch)

@@ -49,7 +49,7 @@ def train_model(csv_path, epochs=100, batch_size=32, lr=5e-4, device='cpu'):
         node_dim=node_dim,
         edge_dim=edge_dim,
         cond_dim=cond_dim,
-        hidden_dim=128,
+        hidden_dim=256,
         dropout=0.2
     ).to(device)
     
@@ -58,7 +58,7 @@ def train_model(csv_path, epochs=100, batch_size=32, lr=5e-4, device='cpu'):
     # Loss and optimizer
     criterion = nn.MSELoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-5)
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)  # Was 10, now 5
     
     # Training loop with early stopping
     best_val_loss = float('inf')
@@ -204,8 +204,8 @@ if __name__ == "__main__":
     
     model = train_model(
         csv_path=csv_path,
-        epochs=100,
+        epochs=150,
         batch_size=32,
-        lr=5e-4,
+        lr=1e-4,
         device=device
     )
